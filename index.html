@@ -1,0 +1,1951 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#122b49">
+  <title>School ID Maker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: #23344b;
+      background: #f3f6fa;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --navy: #122b49;
+      --teal: #168d82;
+      --muted: #718096;
+      --line: #e1e7ef;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .topbar {
+      min-height: 88px;
+      padding: 18px max(24px, calc((100% - 1380px) / 2));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      color: white;
+      background: var(--navy);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-mark {
+      width: 46px; height: 46px; display: grid; place-items: center;
+      border-radius: 14px; background: rgba(255,255,255,.12); font-size: 24px;
+    }
+    .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.3px; }
+    .brand p { margin: 4px 0 0; color: #bdcbe0; font-size: 13px; }
+    .school-setting { width: min(280px, 42vw); }
+    .school-setting label { display: block; margin-bottom: 5px; color: #bdcbe0; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+    .school-setting input {
+      width: 100%; padding: 9px 11px; border: 1px solid #536985; border-radius: 8px;
+      outline: none; color: white; background: #203c5c;
+    }
+    .school-setting input:focus { border-color: #7de0d4; box-shadow: 0 0 0 3px #7de0d433; }
+
+    main { max-width: 1380px; margin: 0 auto; padding: 28px 24px 40px; }
+    .layout { display: grid; grid-template-columns: minmax(290px, .92fr) minmax(350px, 1fr) minmax(330px, .98fr); gap: 20px; align-items: start; }
+    .panel {
+      min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 14px;
+      background: white; box-shadow: 0 3px 14px #253b5710;
+    }
+    .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 17px; }
+    .panel-heading h2 { margin: 0; color: #24364e; font-size: 14px; letter-spacing: .055em; }
+    .count { color: var(--muted); font-size: 12px; }
+    .roster-tools { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search { width: 100%; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; outline: none; }
+    .search:focus, .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px #168d8218; }
+    .table-wrap { min-height: 220px; max-height: 455px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { position: sticky; top: 0; padding: 10px 8px; color: var(--muted); background: white; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+    td { padding: 11px 8px; border-top: 1px solid #edf0f4; font-size: 12px; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: #f6f9fc; }
+    tbody tr.selected { background: #eaf5f3; }
+    .student-name { max-width: 155px; overflow: hidden; color: #293d57; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .student-id { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .empty { padding: 32px 10px; color: var(--muted); text-align: center; font-size: 13px; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+    .btn {
+      min-height: 37px; padding: 8px 12px; border: 1px solid #d6dee8; border-radius: 8px;
+      color: #334860; background: white; font-size: 12px; font-weight: 650;
+    }
+    .btn:hover { background: #f5f8fb; }
+    .btn-primary { border-color: var(--teal); color: white; background: var(--teal); }
+    .btn-primary:hover { background: #11766e; }
+    .btn-danger { color: #a63d46; }
+    .btn:disabled { cursor: not-allowed; opacity: .5; }
+
+    .form-grid { display: grid; gap: 14px; }
+    .field label { display: block; margin-bottom: 6px; color: #57687d; font-size: 12px; font-weight: 650; }
+    .field input, .field textarea {
+      width: 100%; min-height: 39px; padding: 9px 11px; border: 1px solid #dce3eb;
+      border-radius: 8px; color: #23344b; background: white; outline: none;
+    }
+    .field textarea { min-height: 62px; resize: vertical; }
+    .id-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .file-input { display: block; width: 100%; color: var(--muted); font-size: 12px; }
+    .signature-controls { display: flex; align-items: center; gap: 8px; }
+    .signature-controls .file-input { min-width: 0; flex: 1; }
+    .file-input::file-selector-button {
+      margin-right: 10px; padding: 8px 10px; border: 1px solid #d6dee8; border-radius: 7px;
+      color: #334860; background: white; cursor: pointer;
+    }
+    .hint { margin: 6px 0 0; color: #8a97a8; font-size: 11px; line-height: 1.5; }
+    .form-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .form-actions .btn { flex: 1; }
+
+    .preview-area { display: grid; gap: 14px; padding: 12px; border: 1px dashed #dbe3ec; border-radius: 12px; background: #f7f9fc; }
+    .preview-face { min-width: 0; }
+    .face-label { margin: 0 0 7px 2px; color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .08em; }
+    .id-card {
+      position: relative; display: flex; flex-direction: column; width: 100%; aspect-ratio: 1.588 / 1;
+      overflow: hidden; border: 1px solid #d9e0e9; border-radius: 10px; background: white;
+      box-shadow: 0 5px 16px #23344b14;
+    }
+    .card-header {
+      min-height: 23%; display: flex; align-items: center; padding: 0 5%;
+      color: white; background: var(--navy); border-bottom: 4px solid var(--teal);
+      font-size: calc(clamp(11px, 1.2vw, 15px) * var(--card-text-scale, 1)); font-weight: 750; letter-spacing: .035em;
+    }
+    .card-body { display: flex; flex: 1; min-height: 0; gap: 5%; padding: 3.5% 5%; }
+    .card-photo {
+      width: 29%; height: 88%; flex: 0 0 29%; align-self: flex-start; object-fit: cover;
+      border: 1px solid #dce3eb; border-radius: 4px; background: #edf2f7; color: #7a899c;
+    }
+    .card-details { min-width: 0; flex: 1; padding-top: 1%; }
+    .card-name { display: -webkit-box; overflow: hidden; margin: 0 0 3%; color: #1e3048; font-size: calc(clamp(13px, 1.45vw, 19px) * var(--card-text-scale, 1)); font-weight: 750; line-height: 1.05; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .card-label { margin: 0 0 3px; color: #8190a3; font-size: calc(clamp(7px, .68vw, 9px) * var(--card-text-scale, 1)); font-weight: 750; letter-spacing: .07em; }
+    .card-value { overflow: hidden; margin: 0 0 3%; color: #30425a; font-size: calc(clamp(9px, .9vw, 12px) * var(--card-text-scale, 1)); font-weight: 600; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+    .card-footer { padding: 0 5% 2%; color: var(--navy); font-size: calc(clamp(7px, .72vw, 9px) * var(--card-text-scale, 1)); font-weight: 750; letter-spacing: .04em; line-height: 1.1; }
+    .card-back { padding: 5%; color: #28374a; }
+    .card-back .card-header {
+      min-height: auto; padding: 0 0 2.5%; border: 0; border-bottom: 1px solid #dfe4ea;
+      color: #24364e; background: transparent; font-size: calc(clamp(11px, 1.2vw, 15px) * var(--card-text-scale, 1));
+    }
+    .card-back-body { display: flex; flex: 1; min-height: 0; flex-direction: column; justify-content: space-between; padding: 3% 0 0; }
+    .organization-details { margin: 0; color: #58677a; font-size: calc(clamp(7px, .76vw, 10px) * var(--card-text-scale, 1)); line-height: 1.35; white-space: pre-line; overflow-wrap: anywhere; }
+    .authority-block { width: 58%; margin-left: auto; text-align: center; }
+    .authority-signature { display: block; width: 100%; height: 24px; object-fit: contain; object-position: center bottom; }
+    .authority-signature[hidden] { display: none; }
+    .signature-line { height: 24px; border-bottom: 1px solid #526176; }
+    .authority-name { margin: 3px 0 0; color: #28374a; font-size: calc(clamp(8px, .82vw, 11px) * var(--card-text-scale, 1)); font-weight: 700; }
+    .authority-title { margin: 2px 0 0; color: #6f7e90; font-size: calc(clamp(7px, .68vw, 9px) * var(--card-text-scale, 1)); }
+    .id-card { --card-primary: #122b49; --card-accent: #168d82; }
+    .id-card.object-mode > :not(.card-object-layer) { visibility: hidden; }
+    .card-header { background: var(--card-primary); border-bottom-color: var(--card-accent); }
+    .card-footer { color: var(--card-primary); }
+    .card-back .card-header { color: var(--card-primary); }
+    .template-modern.card-front::after {
+      position: absolute; z-index: 1; top: 23%; bottom: 0; left: 0; width: 5px;
+      background: var(--card-accent); content: "";
+    }
+    .template-modern.card-front .card-header { border-bottom-width: 0; }
+    .template-modern.card-back .card-header { border-bottom: 3px solid var(--card-accent); }
+    .template-minimal.card-front .card-header {
+      color: var(--card-primary); background: white; border-bottom: 2px solid var(--card-accent);
+    }
+    .template-minimal.card-back .card-header { border-color: var(--card-accent); }
+    .template-campus.card-front { border-top: 7px solid var(--card-accent); }
+    .template-campus.card-front .card-header {
+      justify-content: center; color: var(--card-primary); background: white; border-bottom: 1px solid #e8edf2;
+      text-align: center;
+    }
+    .template-campus.card-front .card-photo { border: 2px solid var(--card-accent); }
+    .template-campus.card-front .card-footer {
+      padding-top: 2%; color: white; background: var(--card-primary); text-align: center;
+    }
+    .template-campus.card-back { border-top: 7px solid var(--card-accent); }
+    .template-campus.card-back .card-header { border-bottom-color: var(--card-accent); }
+    .template-bold.card-front .card-header { min-height: 28%; border-bottom-width: 7px; }
+    .template-bold.card-front .card-photo { border: 2px solid var(--card-accent); border-radius: 10px; }
+    .template-bold.card-front .card-footer {
+      padding-top: 2%; color: white; background: var(--card-primary); border-top: 3px solid var(--card-accent);
+    }
+    .template-bold.card-back { border-bottom: 7px solid var(--card-accent); }
+    .template-bold.card-back .card-header { padding-bottom: 3%; border-bottom-width: 3px; }
+    .template-diagonal.card-front .card-header,
+    .template-diagonal.card-back .card-header {
+      background: linear-gradient(110deg, var(--card-primary) 0 74%, var(--card-accent) 74% 100%);
+    }
+    .template-diagonal.card-front .card-header { border-bottom-width: 0; }
+    .template-diagonal.card-back .card-header { padding: 2% 3%; color: white; }
+    .template-heritage.card-front { border: 3px double var(--card-accent); }
+    .template-heritage.card-front .card-header { min-height: 25%; border-bottom: 3px double var(--card-accent); }
+    .template-heritage.card-back { border: 3px double var(--card-accent); }
+    .template-heritage.card-back .card-header { border-bottom: 2px double var(--card-accent); }
+    .card-back.back-classic .card-header { border-bottom: 1px solid #dfe4ea; }
+    .card-back.back-centered .card-header { justify-content: center; border: 0; text-align: center; }
+    .card-back.back-centered .card-back-body { align-items: center; text-align: center; }
+    .card-back.back-centered .organization-details { max-width: 90%; }
+    .card-back.back-centered .authority-block { margin-right: auto; margin-left: auto; }
+    .card-back.back-bordered { padding: 4%; }
+    .card-back.back-bordered .card-back-body { margin-top: 3%; padding: 4%; border: 1px solid var(--card-accent); border-radius: 6px; }
+    .card-back.back-contact .card-header { min-height: 28%; padding: 0 5%; color: white; background: var(--card-primary); }
+    .card-back.back-contact .card-back-body { flex-direction: row; align-items: stretch; gap: 5%; padding: 5% 0 0; }
+    .card-back.back-contact .organization-details { flex: 1; align-self: flex-start; }
+    .card-back.back-contact .authority-block { width: 42%; align-self: flex-end; }
+    .id-card.card-front.card-text-align-center,
+    .id-card.card-back.card-back-text-align-center { text-align: center; }
+    .id-card.card-front.card-text-align-right,
+    .id-card.card-back.card-back-text-align-right { text-align: right; }
+    .id-card.card-front.card-text-align-center .card-header,
+    .id-card.card-back.card-back-text-align-center .card-header { justify-content: center; }
+    .id-card.card-front.card-text-align-right .card-header,
+    .id-card.card-back.card-back-text-align-right .card-header { justify-content: flex-end; }
+    .id-card.card-text-bold .card-value,
+    .id-card.card-text-bold .organization-details,
+    .id-card.card-text-bold .authority-name,
+    .id-card.card-text-bold .authority-title { font-weight: 750; }
+    .id-card.card-text-italic .card-header,
+    .id-card.card-text-italic .card-name,
+    .id-card.card-text-italic .card-label,
+    .id-card.card-text-italic .card-value,
+    .id-card.card-text-italic .card-footer,
+    .id-card.card-text-italic .organization-details,
+    .id-card.card-text-italic .authority-name,
+    .id-card.card-text-italic .authority-title { font-style: italic; }
+    .card-object-layer { position: absolute; z-index: 5; inset: 0; overflow: hidden; pointer-events: none; }
+    .card-object-layer.is-active { pointer-events: auto; touch-action: none; }
+    .card-object {
+      position: absolute; display: flex; min-width: 1%; min-height: 1%; align-items: center;
+      justify-content: flex-start; overflow: visible; border: 0; color: #23344b;
+      line-height: 1.05; overflow-wrap: anywhere; user-select: none; touch-action: none;
+    }
+    .card-object-layer.is-active .card-object { cursor: grab; }
+    .card-object-content { width: 100%; pointer-events: none; }
+    .card-object-layer.is-active .card-object.is-selected {
+      outline: 1px dashed #148cce; outline-offset: 1px;
+    }
+    .card-object.is-circle { border-radius: 50%; }
+    .card-object.is-line { min-height: 0; border: 0; border-top: 2px solid currentColor; }
+    .card-object img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+    .card-object.is-image { overflow: hidden; }
+    .card-object.is-card-background { z-index: 0 !important; }
+    .card-object.is-card-background img { object-fit: cover; }
+    .card-object-resize {
+      position: absolute; right: -5px; bottom: -5px; width: 11px; height: 11px;
+      padding: 0; border: 1px solid white; border-radius: 50%; background: #148cce;
+      cursor: nwse-resize;
+    }
+    .card-object-layer:not(.is-active) .card-object-resize { display: none; }
+    .object-designer {
+      margin: 0 0 16px; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: #fbfcfe;
+    }
+    .object-designer-heading { margin: 0 0 9px; color: #334860; font-size: 12px; font-weight: 750; }
+    .object-toolbar { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+    .object-side-tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid #dce3eb; border-radius: 9px; background: #f0f3f7; }
+    .object-side-tab { min-height: 34px; padding: 6px 12px; border: 0; border-radius: 6px; color: #53657b; background: transparent; font-size: 12px; font-weight: 650; cursor: pointer; }
+    .object-side-tab[aria-pressed="true"] { color: #fff; background: var(--teal); box-shadow: 0 1px 3px #142b4930; }
+    .object-toolbar select, .object-toolbar input[type="text"], .object-inspector input[type="text"] {
+      min-height: 36px; padding: 7px 9px; border: 1px solid #dce3eb; border-radius: 7px;
+      color: #23344b; background: white;
+    }
+    .object-toolbar select { min-width: 112px; }
+    .object-toggle { display: inline-flex; gap: 7px; align-items: center; color: #334860; font-size: 12px; }
+    .object-toolbar .file-input { display: none; }
+    .original-id-import { margin-top: 9px; }
+    .original-id-import strong { align-self: center; color: #334860; font-size: 12px; }
+    #original-id-front, #original-id-back { display: none; }
+    .object-inspector {
+      display: grid; grid-template-columns: minmax(120px, 1fr) minmax(90px, .7fr) minmax(100px, .8fr) auto auto minmax(90px, .7fr) auto;
+      gap: 9px; align-items: end; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line);
+    }
+    .object-inspector .field label { font-size: 10px; }
+    .object-inspector input[type="color"] { width: 100%; height: 36px; padding: 3px; border: 1px solid #dce3eb; border-radius: 7px; background: white; }
+    .object-inspector input[type="range"] { width: 100%; min-height: 36px; }
+    .object-inspector input[type="checkbox"] { width: 16px; height: 16px; margin: 0 5px 0 0; vertical-align: middle; }
+    .object-inspector .object-selection-hint { align-self: center; margin: 0; color: var(--muted); font-size: 11px; }
+    .object-help { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .id-customizer {
+      margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe;
+    }
+    .id-customizer summary {
+      padding: 11px 12px; color: #334860; cursor: pointer; font-size: 12px; font-weight: 700;
+    }
+    .customizer-fields {
+      display: grid; grid-template-columns: 1.35fr 1.2fr 1fr 1fr auto; gap: 10px; align-items: end;
+      padding: 0 12px 12px;
+    }
+    .customizer-text-tools {
+      display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px;
+      padding: 0 12px 12px; border-top: 1px solid var(--line);
+    }
+    .customizer-fields .field label { font-size: 10px; }
+    .customizer-fields select, .customizer-fields input[type="color"] {
+      width: 100%; height: 36px; border: 1px solid #dce3eb; border-radius: 7px; background: white;
+    }
+    .customizer-fields select { padding: 6px 8px; color: #23344b; }
+    .customizer-fields input[type="color"] { padding: 3px; cursor: pointer; }
+    .privacy-note { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .status { min-height: 18px; margin: 14px 0 0; color: var(--teal); font-size: 12px; }
+    .status.error { color: #aa3541; }
+
+    .print-sheet { display: none; }
+    @media (max-width: 1050px) {
+      .layout { grid-template-columns: minmax(260px, .9fr) minmax(320px, 1fr); }
+      .preview-panel { grid-column: 1 / -1; }
+      .preview-panel .preview-area { max-width: 540px; margin: auto; }
+      .preview-panel .card-header { font-size: calc(15px * var(--card-text-scale, 1)); }
+      .preview-panel .card-name { font-size: calc(clamp(14px, 3.5vw, 19px) * var(--card-text-scale, 1)); }
+      .preview-panel .card-label { font-size: calc(clamp(7px, 2vw, 9px) * var(--card-text-scale, 1)); }
+      .preview-panel .card-value { font-size: calc(clamp(9px, 2.5vw, 12px) * var(--card-text-scale, 1)); }
+      .preview-panel .card-footer { font-size: calc(9px * var(--card-text-scale, 1)); }
+      .preview-panel .organization-details { font-size: calc(clamp(8px, 1.8vw, 10px) * var(--card-text-scale, 1)); }
+      .preview-panel .authority-name { font-size: calc(clamp(9px, 2vw, 11px) * var(--card-text-scale, 1)); }
+      .preview-panel .authority-title { font-size: calc(clamp(7px, 1.6vw, 9px) * var(--card-text-scale, 1)); }
+      .customizer-fields { grid-template-columns: 1fr 1fr; }
+      .customizer-text-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .object-inspector { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 680px) {
+      .topbar { align-items: flex-start; padding: 16px; }
+      .brand-mark { width: 40px; height: 40px; }
+      .brand h1 { font-size: 18px; }
+      .brand p { max-width: 200px; font-size: 11px; }
+      .school-setting { width: 42%; }
+      main { padding: 18px 14px 28px; }
+      .layout { grid-template-columns: 1fr; gap: 14px; }
+      .preview-panel { grid-column: auto; }
+      .table-wrap { max-height: 300px; }
+      .preview-panel .preview-area { max-width: 440px; }
+    }
+    @media print {
+      @page { size: 3.375in 2.125in; margin: 0; }
+      html, body { width: 3.375in; min-width: 0; min-height: 0; margin: 0; padding: 0; overflow: visible; background: white; }
+      body * { visibility: hidden !important; }
+      .print-sheet, .print-sheet * { visibility: visible !important; }
+      .object-designer { display: none !important; }
+      .print-sheet { position: static; display: block; width: 3.375in; }
+      .print-sheet .id-card { width: 3.375in; height: 2.125in; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .print-sheet .id-card:not(:last-child) { page-break-after: always; break-after: page; }
+      .print-sheet .card-header { min-height: 23%; font-size: calc(12pt * var(--card-text-scale, 1)); }
+      .print-sheet .card-name { font-size: calc(15pt * var(--card-text-scale, 1)); }
+      .print-sheet .card-label { font-size: calc(7pt * var(--card-text-scale, 1)); }
+      .print-sheet .card-value { font-size: calc(9pt * var(--card-text-scale, 1)); }
+      .print-sheet .card-footer { font-size: calc(7pt * var(--card-text-scale, 1)); }
+      .print-sheet .organization-details { font-size: calc(7pt * var(--card-text-scale, 1)); }
+      .print-sheet .authority-name { font-size: calc(8pt * var(--card-text-scale, 1)); }
+      .print-sheet .authority-title { font-size: calc(7pt * var(--card-text-scale, 1)); }
+      .card-object-layer { pointer-events: none !important; }
+      .card-object { outline: none !important; }
+      .card-object-resize { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">▣</div>
+      <div>
+        <h1>School ID Maker</h1>
+        <p>Student records and printable ID cards</p>
+      </div>
+    </div>
+    <div class="school-setting">
+      <label for="school-name">SCHOOL NAME</label>
+      <input id="school-name" maxlength="70" value="Your School Name" autocomplete="organization">
+    </div>
+  </header>
+
+  <main>
+    <div class="layout">
+      <section class="panel" aria-labelledby="roster-title">
+        <div class="panel-heading">
+          <h2 id="roster-title">STUDENT ROSTER</h2>
+          <span id="student-count" class="count">0 students</span>
+        </div>
+        <div class="roster-tools">
+          <input id="search" class="search" type="search" placeholder="Search name, ID, or grade" aria-label="Search students">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Student</th><th scope="col">Grade</th></tr></thead>
+            <tbody id="student-list"></tbody>
+          </table>
+          <div id="empty-roster" class="empty">No students yet. Add a student to get started.</div>
+        </div>
+        <div class="button-row">
+          <button id="new-student" class="btn btn-primary" type="button">＋ New student</button>
+          <button id="delete-student" class="btn btn-danger" type="button" disabled>Delete</button>
+          <button id="export-csv" class="btn" type="button">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="details-title">
+        <div class="panel-heading"><h2 id="details-title">STUDENT DETAILS</h2></div>
+        <form id="student-form" autocomplete="off">
+          <div class="form-grid">
+            <div class="field">
+              <label for="student-id">Student ID</label>
+              <div class="id-row">
+                <input id="student-id" maxlength="40" required>
+                <button id="generate-id" class="btn" type="button">Generate</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="full-name">Full name</label>
+              <input id="full-name" maxlength="100" required>
+            </div>
+            <div class="field">
+              <label for="grade">Grade / class</label>
+              <input id="grade" maxlength="40" placeholder="e.g. Grade 5">
+            </div>
+            <div class="field">
+              <label for="school-year">School year</label>
+              <input id="school-year" maxlength="30" required>
+            </div>
+            <div class="field">
+              <label for="student-photo">Student photo</label>
+              <input id="student-photo" class="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+              <p class="hint">Choose a JPEG, PNG, or WebP photo. The photo is resized and stored in this browser.</p>
+            </div>
+            <div class="field">
+              <label for="organization-details">Organization details for card back</label>
+              <textarea id="organization-details" rows="2" maxlength="180" placeholder="Address, phone, email, or other details"></textarea>
+            </div>
+            <div class="field">
+              <label for="authority-name">Name of person in authority</label>
+              <input id="authority-name" maxlength="80" placeholder="e.g. Principal Jane Smith">
+            </div>
+            <div class="field">
+              <label for="authority-title">Authority title</label>
+              <input id="authority-title" maxlength="60" placeholder="e.g. School Principal">
+            </div>
+            <div class="field">
+              <label for="authority-signature">Authority signature image</label>
+              <div class="signature-controls">
+                <input id="authority-signature" class="file-input" type="file" accept="image/png,image/jpeg,image/webp">
+                <button id="remove-authority-signature" class="btn" type="button" disabled>Remove</button>
+              </div>
+              <p class="hint">Optional. Upload a signature image, or leave blank for a line to sign after printing.</p>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Save student</button>
+            <button id="clear-form" class="btn" type="button">Clear form</button>
+          </div>
+        </form>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="preview-title">
+        <div class="panel-heading"><h2 id="preview-title">FRONT &amp; BACK PREVIEW</h2></div>
+        <details class="id-customizer" open>
+          <summary>ID CUSTOMIZER · DESIGN &amp; TEXT FORMATTING</summary>
+          <div class="customizer-fields">
+            <div class="field">
+              <label for="format-side">Customize side</label>
+              <select id="format-side">
+                <option value="front">Front</option>
+                <option value="back">Back</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-template">Card template</label>
+              <select id="card-template">
+                <option value="classic">Classic</option>
+                <option value="modern">Modern</option>
+                <option value="minimal">Minimal</option>
+                <option value="campus">Campus</option>
+                <option value="bold">Bold</option>
+                <option value="diagonal">Diagonal</option>
+                <option value="heritage">Heritage</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="back-template">Back layout</label>
+              <select id="back-template">
+                <option value="classic">Classic</option>
+                <option value="centered">Centered</option>
+                <option value="bordered">Bordered</option>
+                <option value="contact">Contact panel</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-primary">Main color</label>
+              <input id="card-primary" type="color" value="#122b49">
+            </div>
+            <div class="field">
+              <label for="card-accent">Accent color</label>
+              <input id="card-accent" type="color" value="#168d82">
+            </div>
+            <button id="reset-customizer" class="btn" type="button">Reset</button>
+          </div>
+          <div class="customizer-text-tools">
+            <div class="field">
+              <label for="card-font">Font</label>
+              <select id="card-font">
+                <option value="system">System</option>
+                <option value="arial">Arial</option>
+                <option value="georgia">Georgia</option>
+                <option value="trebuchet">Trebuchet</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-text-size">Text size</label>
+              <select id="card-text-size">
+                <option value="compact">Compact</option>
+                <option value="standard">Standard</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-text-weight">Text weight</label>
+              <select id="card-text-weight">
+                <option value="default">Template default</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-text-style">Text style</label>
+              <select id="card-text-style">
+                <option value="normal">Normal</option>
+                <option value="italic">Italic</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-text-alignment">Front alignment</label>
+              <select id="card-text-alignment">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-back-alignment">Back alignment</label>
+              <select id="card-back-alignment">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+        </details>
+        <section class="object-designer" aria-labelledby="object-designer-title">
+          <h3 id="object-designer-title" class="object-designer-heading">FREEFORM OBJECT DESIGNER</h3>
+          <div class="object-toolbar">
+            <label class="object-toggle"><input id="object-mode" type="checkbox"> <span id="object-mode-label">Use custom objects on the front</span></label>
+            <div class="object-side-tabs" role="group" aria-label="Choose which card side to design">
+              <button id="object-side-front" class="object-side-tab" type="button" aria-pressed="true">Design front</button>
+              <button id="object-side-back" class="object-side-tab" type="button" aria-pressed="false">Design back</button>
+            </div>
+            <select id="object-side" aria-label="Side to edit" hidden>
+              <option value="front">Front</option>
+              <option value="back">Back</option>
+            </select>
+            <label class="object-toggle" for="object-select">Select object</label>
+            <select id="object-select" aria-label="Select an object to edit" disabled>
+              <option value="">No objects</option>
+            </select>
+            <button id="add-text-object" class="btn" type="button">＋ Text</button>
+            <button id="add-rectangle-object" class="btn" type="button">＋ Square</button>
+            <button id="add-circle-object" class="btn" type="button">＋ Circle</button>
+            <button id="add-line-object" class="btn" type="button">＋ Line</button>
+            <label class="object-toggle" for="add-field-object">Student / school field</label>
+            <select id="add-field-object" aria-label="Add a student or school field">
+              <option value="">Choose field…</option>
+              <option value="name">Student name</option>
+              <option value="id">Student ID</option>
+              <option value="grade">Grade / class</option>
+              <option value="year">School year</option>
+              <option value="school">School name</option>
+              <option value="organization">Organization details</option>
+              <option value="authority-name">Authority name</option>
+              <option value="authority-title">Authority title</option>
+              <option value="student-photo">Student photo</option>
+              <option value="authority-signature">Authority signature</option>
+            </select>
+            <button id="add-image-object" class="btn" type="button">＋ Image</button>
+            <input id="object-image-file" class="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <button id="delete-object" class="btn btn-danger" type="button" disabled>Delete selected</button>
+            <button id="send-backward-object" class="btn" type="button" disabled>Send backward</button>
+            <button id="bring-forward-object" class="btn" type="button" disabled>Bring forward</button>
+          </div>
+          <div class="object-inspector">
+            <div class="field">
+              <label for="object-text">Selected text</label>
+              <input id="object-text" type="text" maxlength="160" placeholder="Select a text object" disabled>
+            </div>
+            <div class="field">
+              <label for="object-color">Text / fill color</label>
+              <input id="object-color" type="color" value="#23344b" disabled>
+            </div>
+            <div class="field">
+              <label for="object-font-size">Text size</label>
+              <input id="object-font-size" type="range" min="8" max="36" value="14" disabled>
+            </div>
+            <label class="object-toggle"><input id="object-bold" type="checkbox" disabled> Bold</label>
+            <label class="object-toggle"><input id="object-italic" type="checkbox" disabled> Italic</label>
+            <div class="field">
+              <label for="object-alignment">Text alignment</label>
+              <select id="object-alignment" disabled>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <p id="object-selection-hint" class="object-selection-hint">Add or select an object to edit it.</p>
+          </div>
+          <p class="object-help">Front and back designs are edited separately. Drag objects to position them; drag the blue corner handle to resize. Add fields to automatically show student and school information, then enable the custom object layout for that side.</p>
+          <div class="object-toolbar original-id-import">
+            <strong>Start from an existing ID:</strong>
+            <label class="btn" for="original-id-front">Upload front picture</label>
+            <input id="original-id-front" class="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <label class="btn" for="original-id-back">Upload back picture</label>
+            <input id="original-id-back" class="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <button id="generate-from-pictures" class="btn btn-primary" type="button" disabled>Generate ID</button>
+            <button id="remove-original-id-picture" class="btn btn-danger" type="button">Remove picture from this side</button>
+          </div>
+          <p id="original-id-upload-status" class="object-help" aria-live="polite">Upload a clear front and/or back picture, then select Generate ID. The pictures become card-sized backgrounds you can customize with objects.</p>
+        </section>
+        <div class="preview-area">
+          <div class="preview-face">
+            <p class="face-label">FRONT</p>
+            <article id="preview-card" class="id-card card-front" aria-label="Front of student ID card">
+              <div class="card-header card-school">Your School Name</div>
+              <div class="card-body">
+                <img class="card-photo" alt="Student photo" hidden>
+                <div class="card-details">
+                  <p class="card-name">Student name</p>
+                  <p class="card-label">STUDENT ID</p>
+                  <p class="card-value card-id">SID-2026-001</p>
+                  <p class="card-label">GRADE / CLASS</p>
+                  <p class="card-value card-grade">Grade / class</p>
+                </div>
+              </div>
+              <div class="card-footer">SCHOOL YEAR&nbsp; <span class="card-year"></span></div>
+              <div class="card-object-layer" data-side="front" aria-label="Front design objects"></div>
+            </article>
+          </div>
+          <div class="preview-face">
+            <p class="face-label">BACK</p>
+            <article id="preview-back" class="id-card card-back" aria-label="Back of student ID card">
+              <div class="card-header card-school">Your School Name</div>
+              <div class="card-back-body">
+                <p class="organization-details"></p>
+                <div class="authority-block">
+                  <img class="authority-signature" alt="Authorized person's signature" hidden>
+                  <div class="signature-line" aria-label="Signature line"></div>
+                  <p class="authority-name"></p>
+                  <p class="authority-title"></p>
+                </div>
+              </div>
+              <div class="card-object-layer" data-side="back" aria-label="Back design objects"></div>
+            </article>
+          </div>
+        </div>
+        <div class="button-row">
+          <button id="print-card" class="btn btn-primary" type="button">Print front &amp; back</button>
+        </div>
+        <p class="privacy-note">Your roster and photos stay in this browser on this device. Export a CSV backup when needed.</p>
+      </section>
+    </div>
+  </main>
+  <div class="print-sheet" aria-hidden="true"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "schoolIdMaker.v1";
+      const DEFAULT_SCHOOL = "Your School Name";
+      const DEFAULT_CARD_DESIGN = {
+        template: "classic",
+        backTemplate: "classic",
+        primary: "#122b49",
+        accent: "#168d82",
+        font: "system",
+        textSize: "standard",
+        textWeight: "default",
+        textStyle: "normal",
+        alignment: "left",
+        backAlignment: "left",
+        objectMode: { front: false, back: false },
+        objects: []
+      };
+      const CARD_TEMPLATES = ["classic", "modern", "minimal", "campus", "bold", "diagonal", "heritage"];
+      const BACK_TEMPLATES = ["classic", "centered", "bordered", "contact"];
+      const FONT_FAMILIES = {
+        system: '"Segoe UI", Arial, sans-serif',
+        arial: 'Arial, sans-serif',
+        georgia: 'Georgia, "Times New Roman", serif',
+        trebuchet: '"Trebuchet MS", Arial, sans-serif'
+      };
+      const TEXT_SCALES = { compact: "0.88", standard: "1", large: "1.12" };
+      const TEXT_WEIGHTS = ["default", "bold"];
+      const TEXT_STYLES = ["normal", "italic"];
+      const TEXT_ALIGNMENTS = ["left", "center", "right"];
+      const DEFAULT_FACE_STYLE = {
+        primary: DEFAULT_CARD_DESIGN.primary,
+        accent: DEFAULT_CARD_DESIGN.accent,
+        font: DEFAULT_CARD_DESIGN.font,
+        textSize: DEFAULT_CARD_DESIGN.textSize,
+        textWeight: DEFAULT_CARD_DESIGN.textWeight,
+        textStyle: DEFAULT_CARD_DESIGN.textStyle
+      };
+      const byId = (id) => document.getElementById(id);
+      const elements = {
+        school: byId("school-name"),
+        list: byId("student-list"),
+        empty: byId("empty-roster"),
+        count: byId("student-count"),
+        search: byId("search"),
+        form: byId("student-form"),
+        id: byId("student-id"),
+        name: byId("full-name"),
+        grade: byId("grade"),
+        year: byId("school-year"),
+        photo: byId("student-photo"),
+        organizationDetails: byId("organization-details"),
+        authorityName: byId("authority-name"),
+        authorityTitle: byId("authority-title"),
+        authoritySignature: byId("authority-signature"),
+        removeAuthoritySignature: byId("remove-authority-signature"),
+        cardTemplate: byId("card-template"),
+        backTemplate: byId("back-template"),
+        formatSide: byId("format-side"),
+        objectModeLabel: byId("object-mode-label"),
+        objectSideFront: byId("object-side-front"),
+        objectSideBack: byId("object-side-back"),
+        cardPrimary: byId("card-primary"),
+        cardAccent: byId("card-accent"),
+        cardFont: byId("card-font"),
+        cardTextSize: byId("card-text-size"),
+        cardTextWeight: byId("card-text-weight"),
+        cardTextStyle: byId("card-text-style"),
+        cardTextAlignment: byId("card-text-alignment"),
+        cardBackAlignment: byId("card-back-alignment"),
+        resetCustomizer: byId("reset-customizer"),
+        objectMode: byId("object-mode"),
+        objectSide: byId("object-side"),
+        objectSelect: byId("object-select"),
+        objectText: byId("object-text"),
+        objectColor: byId("object-color"),
+        objectFontSize: byId("object-font-size"),
+        objectBold: byId("object-bold"),
+        objectItalic: byId("object-italic"),
+        objectAlignment: byId("object-alignment"),
+        objectHint: byId("object-selection-hint"),
+        deleteObject: byId("delete-object"),
+        sendBackwardObject: byId("send-backward-object"),
+        bringForwardObject: byId("bring-forward-object"),
+        objectImageFile: byId("object-image-file"),
+        originalIdFront: byId("original-id-front"),
+        originalIdBack: byId("original-id-back"),
+        generateFromPictures: byId("generate-from-pictures"),
+        originalIdUploadStatus: byId("original-id-upload-status"),
+        removeOriginalIdPicture: byId("remove-original-id-picture"),
+        status: byId("status"),
+        delete: byId("delete-student"),
+        card: byId("preview-card"),
+        backCard: byId("preview-back"),
+        printSheet: document.querySelector(".print-sheet")
+      };
+
+      let students = [];
+      let editingId = null;
+      let currentPhoto = "";
+      let currentAuthoritySignature = "";
+      let customObjects = [];
+      const stagedOriginalIdPictures = { front: null, back: null };
+      let faceStyles = {
+        front: { ...DEFAULT_FACE_STYLE },
+        back: { ...DEFAULT_FACE_STYLE }
+      };
+      let objectMode = { front: false, back: false };
+      let selectedObjectId = "";
+      let objectPointerState = null;
+      let statusTimer;
+
+      const OBJECT_FIELDS = {
+        name: "Student name",
+        id: "Student ID",
+        grade: "Grade / class",
+        year: "School year",
+        school: "School name",
+        organization: "Organization details",
+        "authority-name": "Authority name",
+        "authority-title": "Authority title",
+        "student-photo": "Student photo",
+        "authority-signature": "Authority signature"
+      };
+      const OBJECT_TYPES = ["text", "rectangle", "circle", "line", "field", "image"];
+
+      function newObjectId() {
+        return `object-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function validObject(object) {
+        return object && typeof object === "object" &&
+          OBJECT_TYPES.includes(object.type) &&
+          (object.side === "front" || object.side === "back") &&
+          Number.isFinite(object.x) && Number.isFinite(object.y) &&
+          Number.isFinite(object.width) && Number.isFinite(object.height) &&
+          object.x >= 0 && object.x <= 100 && object.y >= 0 && object.y <= 100 &&
+          object.width > 0 && object.width <= 100 && object.height > 0 && object.height <= 100 &&
+          (object.type !== "field" || Object.prototype.hasOwnProperty.call(OBJECT_FIELDS, object.field)) &&
+          (object.type !== "image" || (typeof object.src === "string" &&
+            object.src.startsWith("data:image/jpeg;base64,") && object.src.length <= 1_500_000));
+      }
+
+      function loadFaceStyle(side) {
+        const style = faceStyles[side];
+        elements.cardPrimary.value = style.primary;
+        elements.cardAccent.value = style.accent;
+        elements.cardFont.value = style.font;
+        elements.cardTextSize.value = style.textSize;
+        elements.cardTextWeight.value = style.textWeight;
+        elements.cardTextStyle.value = style.textStyle;
+      }
+
+      function syncObjectModeControl() {
+        const side = elements.objectSide.value;
+        elements.objectMode.checked = objectMode[side];
+        elements.objectModeLabel.textContent = `Use custom objects on the ${side}`;
+        elements.objectSideFront.setAttribute("aria-pressed", String(side === "front"));
+        elements.objectSideBack.setAttribute("aria-pressed", String(side === "back"));
+      }
+
+      function showStatus(message, isError = false) {
+        elements.status.textContent = message;
+        elements.status.classList.toggle("error", isError);
+        window.clearTimeout(statusTimer);
+        if (message) {
+          statusTimer = window.setTimeout(() => { elements.status.textContent = ""; }, 4500);
+        }
+      }
+
+      function readSavedData() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+          students = Array.isArray(saved.students) ? saved.students.filter((student) =>
+            student && typeof student.id === "string" && typeof student.name === "string"
+          ) : [];
+          elements.school.value = typeof saved.schoolName === "string" && saved.schoolName.trim()
+            ? saved.schoolName : DEFAULT_SCHOOL;
+          elements.organizationDetails.value = typeof saved.organizationDetails === "string" ? saved.organizationDetails : "";
+          elements.authorityName.value = typeof saved.authorityName === "string" ? saved.authorityName : "";
+          elements.authorityTitle.value = typeof saved.authorityTitle === "string" ? saved.authorityTitle : "";
+          currentAuthoritySignature = typeof saved.authoritySignature === "string" ? saved.authoritySignature : "";
+          const design = saved.cardDesign && typeof saved.cardDesign === "object" ? saved.cardDesign : {};
+          elements.cardTemplate.value = CARD_TEMPLATES.includes(design.template) ? design.template : DEFAULT_CARD_DESIGN.template;
+          elements.backTemplate.value = BACK_TEMPLATES.includes(design.backTemplate) ? design.backTemplate : DEFAULT_CARD_DESIGN.backTemplate;
+          const legacyStyle = {
+            primary: /^#[0-9a-f]{6}$/i.test(design.primary) ? design.primary : DEFAULT_CARD_DESIGN.primary,
+            accent: /^#[0-9a-f]{6}$/i.test(design.accent) ? design.accent : DEFAULT_CARD_DESIGN.accent,
+            font: Object.prototype.hasOwnProperty.call(FONT_FAMILIES, design.font) ? design.font : DEFAULT_CARD_DESIGN.font,
+            textSize: Object.prototype.hasOwnProperty.call(TEXT_SCALES, design.textSize) ? design.textSize : DEFAULT_CARD_DESIGN.textSize,
+            textWeight: TEXT_WEIGHTS.includes(design.textWeight) ? design.textWeight : DEFAULT_CARD_DESIGN.textWeight,
+            textStyle: TEXT_STYLES.includes(design.textStyle) ? design.textStyle : DEFAULT_CARD_DESIGN.textStyle
+          };
+          faceStyles = Object.fromEntries(["front", "back"].map((side) => {
+            const savedStyle = design[side] && typeof design[side] === "object" ? design[side] : {};
+            return [side, {
+              primary: /^#[0-9a-f]{6}$/i.test(savedStyle.primary) ? savedStyle.primary : legacyStyle.primary,
+              accent: /^#[0-9a-f]{6}$/i.test(savedStyle.accent) ? savedStyle.accent : legacyStyle.accent,
+              font: Object.prototype.hasOwnProperty.call(FONT_FAMILIES, savedStyle.font) ? savedStyle.font : legacyStyle.font,
+              textSize: Object.prototype.hasOwnProperty.call(TEXT_SCALES, savedStyle.textSize) ? savedStyle.textSize : legacyStyle.textSize,
+              textWeight: TEXT_WEIGHTS.includes(savedStyle.textWeight) ? savedStyle.textWeight : legacyStyle.textWeight,
+              textStyle: TEXT_STYLES.includes(savedStyle.textStyle) ? savedStyle.textStyle : legacyStyle.textStyle
+            }];
+          }));
+          const savedObjectMode = design.objectMode;
+          objectMode = {
+            front: typeof savedObjectMode === "object" && savedObjectMode !== null
+              ? savedObjectMode.front === true
+              : savedObjectMode === true,
+            back: typeof savedObjectMode === "object" && savedObjectMode !== null
+              ? savedObjectMode.back === true
+              : savedObjectMode === true
+          };
+          elements.cardPrimary.value = faceStyles.front.primary;
+          elements.cardAccent.value = faceStyles.front.accent;
+          elements.cardFont.value = faceStyles.front.font;
+          elements.cardTextSize.value = faceStyles.front.textSize;
+          elements.cardTextWeight.value = faceStyles.front.textWeight;
+          elements.cardTextStyle.value = faceStyles.front.textStyle;
+          elements.cardTextAlignment.value = TEXT_ALIGNMENTS.includes(design.alignment) ? design.alignment : DEFAULT_CARD_DESIGN.alignment;
+          elements.cardBackAlignment.value = TEXT_ALIGNMENTS.includes(design.backAlignment)
+            ? design.backAlignment
+            : (TEXT_ALIGNMENTS.includes(design.alignment) ? design.alignment : DEFAULT_CARD_DESIGN.backAlignment);
+          elements.objectMode.checked = objectMode.front;
+          customObjects = Array.isArray(design.objects)
+            ? design.objects.slice(0, 100).filter(validObject).map((object) => ({
+              id: typeof object.id === "string" ? object.id : newObjectId(),
+              type: object.type,
+              side: object.side,
+              x: object.x,
+              y: object.y,
+              width: object.width,
+              height: object.height,
+              text: typeof object.text === "string" ? object.text.slice(0, 160) : "",
+              field: object.type === "field" ? object.field : "",
+              src: typeof object.src === "string" ? object.src : "",
+              background: object.background === true,
+              color: /^#[0-9a-f]{6}$/i.test(object.color) ? object.color : "#23344b",
+              fontSize: Number.isFinite(object.fontSize) ? Math.min(36, Math.max(8, object.fontSize)) : 14,
+              bold: object.bold === true,
+              italic: object.italic === true,
+              alignment: TEXT_ALIGNMENTS.includes(object.alignment) ? object.alignment : "left"
+            }))
+            : [];
+        } catch (error) {
+          students = [];
+          elements.school.value = DEFAULT_SCHOOL;
+          elements.organizationDetails.value = "";
+          elements.authorityName.value = "";
+          elements.authorityTitle.value = "";
+          currentAuthoritySignature = "";
+          elements.cardTemplate.value = DEFAULT_CARD_DESIGN.template;
+          elements.backTemplate.value = DEFAULT_CARD_DESIGN.backTemplate;
+          faceStyles = { front: { ...DEFAULT_FACE_STYLE }, back: { ...DEFAULT_FACE_STYLE } };
+          objectMode = { ...DEFAULT_CARD_DESIGN.objectMode };
+          elements.cardPrimary.value = faceStyles.front.primary;
+          elements.cardAccent.value = faceStyles.front.accent;
+          elements.cardFont.value = faceStyles.front.font;
+          elements.cardTextSize.value = faceStyles.front.textSize;
+          elements.cardTextWeight.value = faceStyles.front.textWeight;
+          elements.cardTextStyle.value = faceStyles.front.textStyle;
+          elements.cardTextAlignment.value = DEFAULT_CARD_DESIGN.alignment;
+          elements.cardBackAlignment.value = DEFAULT_CARD_DESIGN.backAlignment;
+          elements.objectMode.checked = objectMode.front;
+          customObjects = [];
+          showStatus("Saved data could not be read. Browser storage may be unavailable or corrupted.", true);
+        }
+      }
+
+      function saveData() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            schoolName: elements.school.value.trim() || DEFAULT_SCHOOL,
+            organizationDetails: elements.organizationDetails.value.trim(),
+            authorityName: elements.authorityName.value.trim(),
+            authorityTitle: elements.authorityTitle.value.trim(),
+            authoritySignature: currentAuthoritySignature,
+            cardDesign: {
+              template: elements.cardTemplate.value,
+              backTemplate: elements.backTemplate.value,
+              front: faceStyles.front,
+              back: faceStyles.back,
+              alignment: elements.cardTextAlignment.value,
+              backAlignment: elements.cardBackAlignment.value,
+              objectMode,
+              objects: customObjects
+            },
+            students
+          }));
+          return true;
+        } catch (error) {
+          showStatus("Could not save data. Browser storage may be full; try a smaller photo.", true);
+          return false;
+        }
+      }
+
+      function nextStudentId() {
+        const year = new Date().getFullYear();
+        const prefix = `SID-${year}-`;
+        let highest = 0;
+        for (const student of students) {
+          const match = student.id.match(new RegExp(`^SID-${year}-(\\d+)$`));
+          if (match) highest = Math.max(highest, Number(match[1]));
+        }
+        return `${prefix}${String(highest + 1).padStart(3, "0")}`;
+      }
+
+      function objectFieldValue(field) {
+        const values = {
+          name: elements.name.value.trim() || "Student name",
+          id: elements.id.value.trim() || "Student ID",
+          grade: elements.grade.value.trim() || "Grade / class",
+          year: elements.year.value.trim() || String(new Date().getFullYear()),
+          school: elements.school.value.trim() || DEFAULT_SCHOOL,
+          organization: elements.organizationDetails.value.trim() || "Organization details",
+          "authority-name": elements.authorityName.value.trim() || "Authority name",
+          "authority-title": elements.authorityTitle.value.trim() || "Authority title"
+        };
+        if (field === "student-photo") return { image: currentPhoto, label: OBJECT_FIELDS[field] };
+        if (field === "authority-signature") {
+          return { image: currentAuthoritySignature, label: OBJECT_FIELDS[field] };
+        }
+        return { text: values[field] || OBJECT_FIELDS[field] };
+      }
+
+      function createObjectNode(object, index) {
+        const node = document.createElement("div");
+        node.className = `card-object${object.type === "circle" ? " is-circle" : ""}${object.type === "line" ? " is-line" : ""}${object.type === "image" || (object.type === "field" && ["student-photo", "authority-signature"].includes(object.field)) ? " is-image" : ""}`;
+        if (object.background) node.classList.add("is-card-background");
+        node.dataset.objectId = object.id;
+        node.style.left = `${object.x}%`;
+        node.style.top = `${object.y}%`;
+        node.style.width = `${object.width}%`;
+        node.style.height = `${object.height}%`;
+        node.style.zIndex = object.background ? "0" : String(index + 1);
+        node.style.color = object.color;
+        node.style.fontSize = `${object.fontSize / 350 * 100}cqw`;
+        node.style.fontWeight = object.bold ? "700" : "400";
+        node.style.fontStyle = object.italic ? "italic" : "normal";
+        node.style.textAlign = object.alignment || "left";
+        node.style.justifyContent = object.alignment === "center" ? "center" : object.alignment === "right" ? "flex-end" : "flex-start";
+
+        if (object.type === "rectangle" || object.type === "circle") {
+          node.style.backgroundColor = object.color;
+        } else if (object.type === "text") {
+          const content = document.createElement("span");
+          content.className = "card-object-content";
+          content.textContent = object.text;
+          node.append(content);
+        } else if (object.type === "field") {
+          const value = objectFieldValue(object.field);
+          if ("image" in value) {
+            if (value.image) {
+              const image = document.createElement("img");
+              image.src = value.image;
+              image.alt = value.label;
+              node.append(image);
+            } else {
+              const content = document.createElement("span");
+              content.className = "card-object-content";
+              content.textContent = value.label;
+              node.append(content);
+              node.style.backgroundColor = "#edf2f7";
+            }
+          } else {
+            const content = document.createElement("span");
+            content.className = "card-object-content";
+            content.textContent = value.text;
+            node.append(content);
+          }
+        } else if (object.type === "image") {
+          const image = document.createElement("img");
+          image.src = object.src;
+          image.alt = object.text || "Custom card image";
+          node.append(image);
+        }
+
+        const resizeHandle = document.createElement("button");
+        resizeHandle.type = "button";
+        resizeHandle.className = "card-object-resize";
+        resizeHandle.setAttribute("aria-label", "Resize object");
+        node.append(resizeHandle);
+        return node;
+      }
+
+      function renderObjectLayer(card) {
+        const layer = card.querySelector(".card-object-layer");
+        if (!layer) return;
+        const side = layer.dataset.side;
+        const active = objectMode[side] && elements.objectSide.value === side;
+        layer.hidden = !objectMode[side];
+        layer.classList.toggle("is-active", active);
+        layer.replaceChildren(...customObjects
+          .map((object, index) => object.side === side ? createObjectNode(object, index) : null)
+          .filter(Boolean));
+        if (!card.style.containerType) card.style.containerType = "inline-size";
+      }
+
+      function getObject(id) {
+        return customObjects.find((object) => object.id === id);
+      }
+
+      function updateObjectInspector() {
+        const object = getObject(selectedObjectId);
+        const sideObjects = customObjects.filter((item) => item.side === elements.objectSide.value);
+        elements.objectSelect.replaceChildren();
+        if (sideObjects.length === 0) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "No objects";
+          elements.objectSelect.append(option);
+        } else {
+          for (const item of sideObjects) {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.type === "field"
+              ? `Field: ${OBJECT_FIELDS[item.field]}`
+              : item.type === "text"
+                ? `Text: ${item.text || "(empty)"}`
+                : item.type === "image"
+                  ? `Image: ${item.text || "Uploaded image"}`
+                  : item.type[0].toUpperCase() + item.type.slice(1);
+            elements.objectSelect.append(option);
+          }
+        }
+        elements.objectSelect.disabled = sideObjects.length === 0;
+        elements.objectSelect.value = object && object.side === elements.objectSide.value ? object.id : "";
+        const hasText = object && (object.type === "text" || object.type === "image");
+        elements.objectText.disabled = !hasText;
+        elements.objectText.value = hasText ? object.text : "";
+        elements.objectText.placeholder = object && object.type === "image" ? "Image description" : "Select a text object";
+        const colorEditable = object && object.type !== "image" &&
+          !(object.type === "field" && ["student-photo", "authority-signature"].includes(object.field));
+        elements.objectColor.disabled = !colorEditable;
+        elements.objectColor.value = object ? object.color : "#23344b";
+        const sizeEditable = object && (object.type === "text" || object.type === "field") &&
+          !(object.type === "field" && ["student-photo", "authority-signature"].includes(object.field));
+        elements.objectFontSize.disabled = !sizeEditable;
+        elements.objectFontSize.value = object ? String(object.fontSize) : "14";
+        const formatEditable = object && object.type === "text";
+        elements.objectBold.disabled = !formatEditable;
+        elements.objectBold.checked = Boolean(object && object.bold);
+        elements.objectItalic.disabled = !formatEditable;
+        elements.objectItalic.checked = Boolean(object && object.italic);
+        elements.objectAlignment.disabled = !formatEditable;
+        elements.objectAlignment.value = object && TEXT_ALIGNMENTS.includes(object.alignment) ? object.alignment : "left";
+        elements.deleteObject.disabled = !object;
+        const sameSide = object ? customObjects.filter((item) => item.side === object.side) : [];
+        const position = object ? sameSide.findIndex((item) => item.id === object.id) : -1;
+        elements.sendBackwardObject.disabled = !object || position <= 0;
+        elements.bringForwardObject.disabled = !object || position < 0 || position >= sameSide.length - 1;
+        elements.objectHint.textContent = object
+          ? (object.type === "field" ? `Linked to ${OBJECT_FIELDS[object.field]}.` : `${object.type[0].toUpperCase()}${object.type.slice(1)} selected.`)
+          : "Add or select an object to edit it.";
+      }
+
+      function updateObjectNodes(object) {
+        for (const card of [elements.card, elements.backCard]) {
+          const node = Array.from(card.querySelectorAll(".card-object"))
+            .find((item) => item.dataset.objectId === object.id);
+          if (!node) continue;
+          node.style.color = object.color;
+          node.style.fontSize = `${object.fontSize / 350 * 100}cqw`;
+          node.style.fontWeight = object.bold ? "700" : "400";
+          node.style.fontStyle = object.italic ? "italic" : "normal";
+          node.style.textAlign = object.alignment || "left";
+          node.style.justifyContent = object.alignment === "center" ? "center" : object.alignment === "right" ? "flex-end" : "flex-start";
+          if (object.type === "text") {
+            const content = node.querySelector(".card-object-content");
+            if (content) content.textContent = object.text;
+          }
+          if (object.type === "image") {
+            const image = node.querySelector("img");
+            if (image) image.alt = object.text || "Custom card image";
+          }
+          if (object.type === "rectangle" || object.type === "circle") {
+            node.style.backgroundColor = object.color;
+          }
+        }
+      }
+
+      function selectObject(id) {
+        selectedObjectId = id;
+        const object = getObject(id);
+        if (object) {
+          elements.objectSide.value = object.side;
+          syncObjectModeControl();
+        }
+        updateCards();
+        updateObjectInspector();
+      }
+
+      function addObject(type, options = {}) {
+        if (customObjects.length >= 100) {
+          showStatus("A card can contain up to 100 objects.", true);
+          return;
+        }
+        const side = elements.objectSide.value;
+        const previousObjects = customObjects;
+        if (options.background) {
+          customObjects = customObjects.filter((object) => !(object.side === side && object.background));
+        }
+        const width = options.width ?? (type === "line" ? 45 : type === "circle" ? 20 : 42);
+        const height = options.height ?? (type === "line" ? 0.1 : type === "circle" ? 20 : 12);
+        const sideCount = customObjects.filter((object) => object.side === side).length;
+        const object = {
+          id: newObjectId(),
+          type,
+          side,
+          x: options.x ?? Math.min(8 + (sideCount % 4) * 11, 100 - width),
+          y: options.y ?? Math.min(10 + (sideCount % 6) * 12, 100 - height),
+          width,
+          height,
+          text: options.text || "",
+          field: options.field || "",
+          src: options.src || "",
+          background: options.background === true,
+          color: options.color || "#23344b",
+          fontSize: options.fontSize || 14,
+          bold: options.bold === true,
+          italic: options.italic === true,
+          alignment: options.alignment || "left"
+        };
+        customObjects.push(object);
+        objectMode[side] = true;
+        syncObjectModeControl();
+        selectedObjectId = object.id;
+        updateCards();
+        updateObjectInspector();
+        if (saveData()) {
+          showStatus(options.background ? `Original ID ${side} picture added as the card design.` : `${type[0].toUpperCase()}${type.slice(1)} added to the ${side}.`);
+        } else {
+          customObjects = previousObjects;
+          selectedObjectId = "";
+          updateCards();
+          updateObjectInspector();
+        }
+      }
+
+      function removeSelectedObject() {
+        if (!selectedObjectId) return;
+        customObjects = customObjects.filter((object) => object.id !== selectedObjectId);
+        selectedObjectId = "";
+        updateCards();
+        updateObjectInspector();
+        if (saveData()) showStatus("Object deleted.");
+      }
+
+      function moveSelectedObject(direction) {
+        const index = customObjects.findIndex((object) => object.id === selectedObjectId);
+        if (index < 0) return;
+        const side = customObjects[index].side;
+        const sameSideIndexes = customObjects.map((object, itemIndex) => object.side === side ? itemIndex : -1)
+          .filter((itemIndex) => itemIndex >= 0);
+        const sidePosition = sameSideIndexes.indexOf(index);
+        const targetIndex = sameSideIndexes[sidePosition + direction];
+        if (targetIndex === undefined) return;
+        [customObjects[index], customObjects[targetIndex]] = [customObjects[targetIndex], customObjects[index]];
+        updateCards();
+        updateObjectInspector();
+        saveData();
+      }
+
+      function updateCard(card) {
+        const side = card.classList.contains("card-back") ? "back" : "front";
+        const style = faceStyles[side];
+        const schoolName = elements.school.value.trim() || DEFAULT_SCHOOL;
+        card.classList.remove(...CARD_TEMPLATES.map((template) => `template-${template}`));
+        card.classList.add(`template-${elements.cardTemplate.value}`);
+        card.classList.remove(...BACK_TEMPLATES.map((template) => `back-${template}`));
+        if (card.classList.contains("card-back")) {
+          card.classList.add(`back-${elements.backTemplate.value}`);
+        }
+        card.style.setProperty("--card-primary", style.primary);
+        card.style.setProperty("--card-accent", style.accent);
+        card.style.setProperty("--card-text-scale", TEXT_SCALES[style.textSize]);
+        card.classList.toggle("object-mode", objectMode[side]);
+        card.style.fontFamily = FONT_FAMILIES[style.font];
+        card.classList.remove(
+          "card-text-bold",
+          "card-text-italic",
+          ...TEXT_ALIGNMENTS.map((alignment) => `card-text-align-${alignment}`),
+          ...TEXT_ALIGNMENTS.map((alignment) => `card-back-text-align-${alignment}`)
+        );
+        if (style.textWeight === "bold") card.classList.add("card-text-bold");
+        if (style.textStyle === "italic") card.classList.add("card-text-italic");
+        const alignment = card.classList.contains("card-back")
+          ? elements.cardBackAlignment.value
+          : elements.cardTextAlignment.value;
+        const alignmentClass = card.classList.contains("card-back") ? "card-back-text-align" : "card-text-align";
+        card.classList.add(`${alignmentClass}-${alignment}`);
+        for (const school of card.querySelectorAll(".card-school")) {
+          school.textContent = schoolName;
+        }
+        const name = card.querySelector(".card-name");
+        if (name) name.textContent = elements.name.value.trim() || "Student name";
+        const id = card.querySelector(".card-id");
+        if (id) id.textContent = elements.id.value.trim() || "Student ID";
+        const grade = card.querySelector(".card-grade");
+        if (grade) grade.textContent = elements.grade.value.trim() || "Grade / class";
+        const year = card.querySelector(".card-year");
+        if (year) year.textContent = elements.year.value.trim() || String(new Date().getFullYear());
+        const image = card.querySelector(".card-photo");
+        if (image) {
+          if (currentPhoto) {
+            image.src = currentPhoto;
+            image.hidden = false;
+          } else {
+            image.removeAttribute("src");
+            image.hidden = true;
+          }
+        }
+        const details = card.querySelector(".organization-details");
+        if (details) details.textContent = elements.organizationDetails.value.trim();
+        const authorityName = card.querySelector(".authority-name");
+        if (authorityName) authorityName.textContent = elements.authorityName.value.trim();
+        const authorityTitle = card.querySelector(".authority-title");
+        if (authorityTitle) authorityTitle.textContent = elements.authorityTitle.value.trim();
+        const signature = card.querySelector(".authority-signature");
+        if (signature) {
+          const signatureLine = card.querySelector(".signature-line");
+          if (currentAuthoritySignature) {
+            signature.src = currentAuthoritySignature;
+            signature.hidden = false;
+            if (signatureLine) signatureLine.hidden = true;
+          } else {
+            signature.removeAttribute("src");
+            signature.hidden = true;
+            if (signatureLine) signatureLine.hidden = false;
+          }
+        }
+        renderObjectLayer(card);
+      }
+
+      function updateCards() {
+        updateCard(elements.card);
+        updateCard(elements.backCard);
+      }
+
+      function renderList() {
+        const query = elements.search.value.trim().toLocaleLowerCase();
+        const visible = students.filter((student) =>
+          [student.name, student.id, student.grade || ""].some((value) =>
+            String(value).toLocaleLowerCase().includes(query)
+          )
+        ).sort((a, b) => a.name.localeCompare(b.name));
+        elements.list.replaceChildren();
+        elements.empty.hidden = visible.length > 0;
+        elements.empty.textContent = students.length === 0
+          ? "No students yet. Add a student to get started."
+          : "No students match your search.";
+        elements.count.textContent = `${students.length} ${students.length === 1 ? "student" : "students"}`;
+
+        for (const student of visible) {
+          const row = document.createElement("tr");
+          row.tabIndex = 0;
+          row.setAttribute("aria-label", `${student.name}, ${student.id}`);
+          if (student.id === editingId) {
+            row.classList.add("selected");
+            row.setAttribute("aria-selected", "true");
+          }
+          const nameCell = document.createElement("td");
+          const name = document.createElement("div");
+          name.className = "student-name";
+          name.textContent = student.name;
+          const id = document.createElement("div");
+          id.className = "student-id";
+          id.textContent = student.id;
+          nameCell.append(name, id);
+          const gradeCell = document.createElement("td");
+          gradeCell.textContent = student.grade || "—";
+          row.append(nameCell, gradeCell);
+          const select = () => loadStudent(student.id);
+          row.addEventListener("click", select);
+          row.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              select();
+            }
+          });
+          elements.list.append(row);
+        }
+        elements.delete.disabled = !editingId || !students.some((student) => student.id === editingId);
+      }
+
+      function loadStudent(id) {
+        const student = students.find((item) => item.id === id);
+        if (!student) return;
+        editingId = student.id;
+        elements.id.value = student.id;
+        elements.name.value = student.name;
+        elements.grade.value = student.grade || "";
+        elements.year.value = student.schoolYear || String(new Date().getFullYear());
+        currentPhoto = student.photo || "";
+        elements.photo.value = "";
+        updateCards();
+        renderList();
+      }
+
+      function clearForm() {
+        editingId = null;
+        currentPhoto = "";
+        elements.form.reset();
+        elements.year.value = String(new Date().getFullYear());
+        elements.id.value = nextStudentId();
+        elements.photo.value = "";
+        updateCards();
+        renderList();
+        elements.name.focus();
+      }
+
+      function resizePhoto(file) {
+        return new Promise((resolve, reject) => {
+          if (!file.type.startsWith("image/")) {
+            reject(new Error("Choose a valid image file."));
+            return;
+          }
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("The selected photo could not be read."));
+          reader.onload = () => {
+            const image = new Image();
+            image.onerror = () => reject(new Error("The selected file is not a supported image."));
+            image.onload = () => {
+              const maxWidth = 480;
+              const maxHeight = 640;
+              const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.max(1, Math.round(image.width * scale));
+              canvas.height = Math.max(1, Math.round(image.height * scale));
+              const context = canvas.getContext("2d");
+              if (!context) {
+                reject(new Error("This browser could not prepare the photo."));
+                return;
+              }
+              context.fillStyle = "#ffffff";
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(image, 0, 0, canvas.width, canvas.height);
+              resolve(canvas.toDataURL("image/jpeg", 0.82));
+            };
+            image.src = String(reader.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function resizeSignature(file) {
+        return new Promise((resolve, reject) => {
+          if (!file.type.startsWith("image/")) {
+            reject(new Error("Choose a valid signature image."));
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            reject(new Error("Choose a signature image smaller than 5 MB."));
+            return;
+          }
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("The signature image could not be read."));
+          reader.onload = () => {
+            const image = new Image();
+            image.onerror = () => reject(new Error("The selected file is not a supported image."));
+            image.onload = () => {
+              const scale = Math.min(1, 600 / image.width, 200 / image.height);
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.max(1, Math.round(image.width * scale));
+              canvas.height = Math.max(1, Math.round(image.height * scale));
+              const context = canvas.getContext("2d");
+              if (!context) {
+                reject(new Error("This browser could not prepare the signature."));
+                return;
+              }
+              context.drawImage(image, 0, 0, canvas.width, canvas.height);
+              resolve(canvas.toDataURL("image/png"));
+            };
+            image.src = String(reader.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function resizeCardImage(file) {
+        return new Promise((resolve, reject) => {
+          if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            reject(new Error("Choose a JPEG, PNG, or WebP picture."));
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            reject(new Error("Choose an ID picture smaller than 5 MB."));
+            return;
+          }
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("The ID picture could not be read."));
+          reader.onload = () => {
+            const image = new Image();
+            image.onerror = () => reject(new Error("The selected file is not a supported image."));
+            image.onload = () => {
+              const targetWidth = 960;
+              const targetHeight = 604;
+              const canvas = document.createElement("canvas");
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
+              const context = canvas.getContext("2d");
+              if (!context) {
+                reject(new Error("This browser could not prepare the ID picture."));
+                return;
+              }
+              const scale = Math.max(targetWidth / image.width, targetHeight / image.height);
+              const width = image.width * scale;
+              const height = image.height * scale;
+              context.drawImage(image, (targetWidth - width) / 2, (targetHeight - height) / 2, width, height);
+              resolve(canvas.toDataURL("image/jpeg", 0.88));
+            };
+            image.src = String(reader.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function csvCell(value) {
+        return `"${String(value ?? "").replaceAll('"', '""')}"`;
+      }
+
+      elements.form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const record = {
+          id: elements.id.value.trim(),
+          name: elements.name.value.trim(),
+          grade: elements.grade.value.trim(),
+          schoolYear: elements.year.value.trim(),
+          photo: currentPhoto
+        };
+        if (!record.id || !record.name || !record.schoolYear) {
+          showStatus("Student ID, full name, and school year are required.", true);
+          return;
+        }
+        const duplicate = students.some((student) => student.id === record.id && student.id !== editingId);
+        if (duplicate) {
+          showStatus("That student ID is already in use. Enter a unique ID.", true);
+          elements.id.focus();
+          return;
+        }
+        const previous = students;
+        students = editingId
+          ? students.map((student) => student.id === editingId ? record : student)
+          : [...students, record];
+        if (!saveData()) {
+          students = previous;
+          return;
+        }
+        editingId = record.id;
+        renderList();
+        updateCards();
+        showStatus("Student details saved.");
+      });
+
+      elements.photo.addEventListener("change", async () => {
+        const file = elements.photo.files && elements.photo.files[0];
+        if (!file) return;
+        try {
+          currentPhoto = await resizePhoto(file);
+          updateCards();
+          showStatus("Photo added. Save the student to keep it.");
+        } catch (error) {
+          showStatus(error.message || "The selected photo could not be used.", true);
+          elements.photo.value = "";
+        }
+      });
+
+      elements.authoritySignature.addEventListener("change", async () => {
+        const file = elements.authoritySignature.files && elements.authoritySignature.files[0];
+        if (!file) return;
+        const previousSignature = currentAuthoritySignature;
+        try {
+          currentAuthoritySignature = await resizeSignature(file);
+          if (!saveData()) {
+            currentAuthoritySignature = previousSignature;
+            updateCards();
+            return;
+          }
+          elements.removeAuthoritySignature.disabled = false;
+          updateCards();
+          showStatus("Authority signature saved.");
+        } catch (error) {
+          showStatus(error.message || "The signature could not be used.", true);
+          elements.authoritySignature.value = "";
+        }
+      });
+
+      elements.removeAuthoritySignature.addEventListener("click", () => {
+        const previousSignature = currentAuthoritySignature;
+        currentAuthoritySignature = "";
+        if (!saveData()) {
+          currentAuthoritySignature = previousSignature;
+          updateCards();
+          return;
+        }
+        elements.authoritySignature.value = "";
+        elements.removeAuthoritySignature.disabled = true;
+        updateCards();
+        showStatus("Authority signature removed.");
+      });
+
+      for (const card of [elements.card, elements.backCard]) {
+        const layer = card.querySelector(".card-object-layer");
+        layer.addEventListener("pointerdown", (event) => {
+          const node = event.target.closest(".card-object");
+          if (!node || !layer.classList.contains("is-active")) return;
+          event.preventDefault();
+          const object = getObject(node.dataset.objectId);
+          if (!object) return;
+          selectedObjectId = object.id;
+          updateObjectInspector();
+          for (const item of document.querySelectorAll(".card-object")) {
+            item.classList.toggle("is-selected", item.dataset.objectId === object.id);
+          }
+          const bounds = layer.getBoundingClientRect();
+          objectPointerState = {
+            id: object.id,
+            side: object.side,
+            resizing: Boolean(event.target.closest(".card-object-resize")),
+            startX: event.clientX,
+            startY: event.clientY,
+            x: object.x,
+            y: object.y,
+            width: object.width,
+            height: object.height,
+            layerWidth: bounds.width,
+            layerHeight: bounds.height
+          };
+        });
+      }
+
+      window.addEventListener("pointermove", (event) => {
+        if (!objectPointerState) return;
+        const object = getObject(objectPointerState.id);
+        const card = objectPointerState.side === "front" ? elements.card : elements.backCard;
+        const node = Array.from(card.querySelectorAll(".card-object"))
+          .find((item) => item.dataset.objectId === objectPointerState.id);
+        if (!object || !node) return;
+        const dx = (event.clientX - objectPointerState.startX) / objectPointerState.layerWidth * 100;
+        const dy = (event.clientY - objectPointerState.startY) / objectPointerState.layerHeight * 100;
+        if (objectPointerState.resizing) {
+          object.width = Math.min(100 - objectPointerState.x, Math.max(2, objectPointerState.width + dx));
+          object.height = Math.min(100 - objectPointerState.y, Math.max(2, objectPointerState.height + dy));
+          node.style.width = `${object.width}%`;
+          node.style.height = `${object.height}%`;
+        } else {
+          object.x = Math.min(100 - object.width, Math.max(0, objectPointerState.x + dx));
+          object.y = Math.min(100 - object.height, Math.max(0, objectPointerState.y + dy));
+          node.style.left = `${object.x}%`;
+          node.style.top = `${object.y}%`;
+        }
+      });
+
+      function finishObjectPointer() {
+        if (!objectPointerState) return;
+        objectPointerState = null;
+        saveData();
+        updateObjectInspector();
+      }
+      window.addEventListener("pointerup", finishObjectPointer);
+      window.addEventListener("pointercancel", finishObjectPointer);
+
+      byId("add-text-object").addEventListener("click", () => {
+        addObject("text", { text: "Type your text", width: 40, height: 12 });
+      });
+      byId("add-rectangle-object").addEventListener("click", () => addObject("rectangle", { width: 24, height: 20 }));
+      byId("add-circle-object").addEventListener("click", () => addObject("circle", { width: 20, height: 20 }));
+      byId("add-line-object").addEventListener("click", () => addObject("line", { width: 45, height: 0.1 }));
+      byId("add-field-object").addEventListener("change", (event) => {
+        const field = event.target.value;
+        if (!field) return;
+        addObject("field", { field, width: field.endsWith("photo") || field.endsWith("signature") ? 25 : 42, height: field.endsWith("photo") || field.endsWith("signature") ? 32 : 10 });
+        event.target.value = "";
+      });
+      byId("add-image-object").addEventListener("click", () => elements.objectImageFile.click());
+      elements.objectImageFile.addEventListener("change", async () => {
+        const file = elements.objectImageFile.files && elements.objectImageFile.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+          showStatus("Choose an image smaller than 5 MB.", true);
+          elements.objectImageFile.value = "";
+          return;
+        }
+        try {
+          const src = await resizePhoto(file);
+          addObject("image", { src, text: file.name.slice(0, 160), width: 32, height: 32 });
+        } catch (error) {
+          showStatus(error.message || "The selected image could not be used.", true);
+        } finally {
+          elements.objectImageFile.value = "";
+        }
+      });
+      for (const [input, side] of [[elements.originalIdFront, "front"], [elements.originalIdBack, "back"]]) {
+        input.addEventListener("change", async () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          try {
+            stagedOriginalIdPictures[side] = {
+              src: await resizeCardImage(file),
+              name: file.name
+            };
+            const readySides = ["front", "back"]
+              .filter((face) => stagedOriginalIdPictures[face])
+              .map((face) => face[0].toUpperCase() + face.slice(1));
+            elements.generateFromPictures.disabled = false;
+            elements.originalIdUploadStatus.textContent = `${readySides.join(" and ")} picture${readySides.length === 1 ? "" : "s"} ready. Select Generate ID to apply them.`;
+          } catch (error) {
+            showStatus(error.message || "The ID picture could not be used.", true);
+          } finally {
+            input.value = "";
+          }
+        });
+      }
+      elements.generateFromPictures.addEventListener("click", () => {
+        const sides = ["front", "back"].filter((side) => stagedOriginalIdPictures[side]);
+        if (sides.length === 0) {
+          showStatus("Upload an ID picture before generating.", true);
+          return;
+        }
+        const previousObjects = customObjects;
+        const previousModes = { ...objectMode };
+        const previousSelection = selectedObjectId;
+        customObjects = customObjects.filter((object) => !object.background || !sides.includes(object.side));
+        for (const side of sides) {
+          customObjects.push({
+            id: newObjectId(),
+            type: "image",
+            side,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+            text: `Original ID ${side}`,
+            field: "",
+            src: stagedOriginalIdPictures[side].src,
+            background: true,
+            color: "#23344b",
+            fontSize: 14,
+            bold: false,
+            italic: false,
+            alignment: "left"
+          });
+          objectMode[side] = true;
+        }
+        if (sides.length === 1) {
+          elements.objectSide.value = sides[0];
+          selectedObjectId = "";
+          syncObjectModeControl();
+        }
+        updateCards();
+        updateObjectInspector();
+        if (!saveData()) {
+          customObjects = previousObjects;
+          objectMode = previousModes;
+          selectedObjectId = previousSelection;
+          updateCards();
+          updateObjectInspector();
+          return;
+        }
+        for (const side of sides) stagedOriginalIdPictures[side] = null;
+        elements.generateFromPictures.disabled = true;
+        elements.originalIdUploadStatus.textContent = `ID generated from the ${sides.join(" and ")} picture${sides.length === 1 ? "" : "s"}. You can add editable objects over the design.`;
+        showStatus(`ID generated from the ${sides.join(" and ")} picture${sides.length === 1 ? "" : "s"}.`);
+      });
+      elements.removeOriginalIdPicture.addEventListener("click", () => {
+        const side = elements.objectSide.value;
+        const hadStagedPicture = Boolean(stagedOriginalIdPictures[side]);
+        stagedOriginalIdPictures[side] = null;
+        elements.generateFromPictures.disabled = !stagedOriginalIdPictures.front && !stagedOriginalIdPictures.back;
+        const previousObjects = customObjects;
+        customObjects = customObjects.filter((object) => !(object.side === side && object.background));
+        if (customObjects.length === previousObjects.length) {
+          if (hadStagedPicture) {
+            elements.originalIdUploadStatus.textContent = `Pending ${side} picture removed.`;
+            showStatus(`Pending ID ${side} picture removed.`);
+          } else {
+            showStatus(`There is no uploaded ID picture on the ${side} to remove.`, true);
+          }
+          return;
+        }
+        if (selectedObjectId && !getObject(selectedObjectId)) selectedObjectId = "";
+        updateCards();
+        updateObjectInspector();
+        if (saveData()) {
+          elements.originalIdUploadStatus.textContent = `Uploaded ID ${side} picture removed.`;
+          showStatus(`Uploaded ID ${side} picture removed.`);
+        }
+      });
+      elements.objectMode.addEventListener("change", () => {
+        const side = elements.objectSide.value;
+        objectMode[side] = elements.objectMode.checked;
+        updateCards();
+        updateObjectInspector();
+        if (saveData()) showStatus(elements.objectMode.checked
+          ? `Custom object layout enabled on the ${side}.`
+          : `Template layout enabled on the ${side}.`);
+      });
+      elements.objectSide.addEventListener("change", () => {
+        const object = getObject(selectedObjectId);
+        if (object && object.side !== elements.objectSide.value) selectedObjectId = "";
+        syncObjectModeControl();
+        updateCards();
+        updateObjectInspector();
+      });
+      elements.objectSideFront.addEventListener("click", () => {
+        elements.objectSide.value = "front";
+        elements.objectSide.dispatchEvent(new Event("change"));
+      });
+      elements.objectSideBack.addEventListener("click", () => {
+        elements.objectSide.value = "back";
+        elements.objectSide.dispatchEvent(new Event("change"));
+      });
+      elements.formatSide.addEventListener("change", () => {
+        loadFaceStyle(elements.formatSide.value);
+      });
+      elements.objectSelect.addEventListener("change", () => {
+        selectObject(elements.objectSelect.value);
+      });
+      elements.deleteObject.addEventListener("click", removeSelectedObject);
+      elements.sendBackwardObject.addEventListener("click", () => moveSelectedObject(-1));
+      elements.bringForwardObject.addEventListener("click", () => moveSelectedObject(1));
+      elements.objectText.addEventListener("input", () => {
+        const object = getObject(selectedObjectId);
+        if (!object || (object.type !== "text" && object.type !== "image")) return;
+        object.text = elements.objectText.value;
+        updateObjectNodes(object);
+        saveData();
+      });
+      elements.objectColor.addEventListener("input", () => {
+        const object = getObject(selectedObjectId);
+        if (!object) return;
+        object.color = elements.objectColor.value;
+        updateObjectNodes(object);
+        saveData();
+      });
+      elements.objectFontSize.addEventListener("input", () => {
+        const object = getObject(selectedObjectId);
+        if (!object) return;
+        object.fontSize = Number(elements.objectFontSize.value);
+        updateObjectNodes(object);
+        saveData();
+      });
+      for (const [control, property] of [[elements.objectBold, "bold"], [elements.objectItalic, "italic"], [elements.objectAlignment, "alignment"]]) {
+        control.addEventListener("change", () => {
+          const object = getObject(selectedObjectId);
+          if (!object || object.type !== "text") return;
+          object[property] = property === "alignment" ? control.value : control.checked;
+          updateObjectNodes(object);
+          saveData();
+        });
+      }
+      document.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (!selectedObjectId || (target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+        if (event.key === "Delete" || event.key === "Backspace") {
+          event.preventDefault();
+          removeSelectedObject();
+        } else if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+          const object = getObject(selectedObjectId);
+          if (!object) return;
+          event.preventDefault();
+          const step = event.shiftKey ? 5 : 1;
+          if (event.key === "ArrowLeft") object.x = Math.max(0, object.x - step);
+          if (event.key === "ArrowRight") object.x = Math.min(100 - object.width, object.x + step);
+          if (event.key === "ArrowUp") object.y = Math.max(0, object.y - step);
+          if (event.key === "ArrowDown") object.y = Math.min(100 - object.height, object.y + step);
+          const node = Array.from((object.side === "front" ? elements.card : elements.backCard).querySelectorAll(".card-object"))
+            .find((item) => item.dataset.objectId === object.id);
+          if (node) {
+            node.style.left = `${object.x}%`;
+            node.style.top = `${object.y}%`;
+          }
+          saveData();
+        }
+      });
+
+      elements.school.addEventListener("input", () => {
+        updateCards();
+        if (saveData()) showStatus("School name saved.");
+      });
+      for (const setting of [elements.organizationDetails, elements.authorityName, elements.authorityTitle]) {
+        setting.addEventListener("input", () => {
+          updateCards();
+          if (saveData()) showStatus("Organization details saved.");
+        });
+      }
+      for (const setting of [elements.cardPrimary, elements.cardAccent, elements.cardFont, elements.cardTextSize, elements.cardTextWeight, elements.cardTextStyle]) {
+        setting.addEventListener("input", () => {
+          const faceStyle = faceStyles[elements.formatSide.value];
+          faceStyle.primary = elements.cardPrimary.value;
+          faceStyle.accent = elements.cardAccent.value;
+          faceStyle.font = elements.cardFont.value;
+          faceStyle.textSize = elements.cardTextSize.value;
+          faceStyle.textWeight = elements.cardTextWeight.value;
+          faceStyle.textStyle = elements.cardTextStyle.value;
+          updateCards();
+          if (saveData()) showStatus(`${elements.formatSide.value[0].toUpperCase()}${elements.formatSide.value.slice(1)} design saved.`);
+        });
+      }
+      for (const setting of [
+        elements.cardTemplate,
+        elements.backTemplate,
+        elements.cardTextAlignment,
+        elements.cardBackAlignment
+      ]) {
+        setting.addEventListener("input", () => {
+          updateCards();
+          if (saveData()) showStatus("ID card design saved.");
+        });
+      }
+      elements.resetCustomizer.addEventListener("click", () => {
+        elements.cardTemplate.value = DEFAULT_CARD_DESIGN.template;
+        elements.backTemplate.value = DEFAULT_CARD_DESIGN.backTemplate;
+        elements.cardPrimary.value = DEFAULT_CARD_DESIGN.primary;
+        elements.cardAccent.value = DEFAULT_CARD_DESIGN.accent;
+        elements.cardFont.value = DEFAULT_CARD_DESIGN.font;
+        elements.cardTextSize.value = DEFAULT_CARD_DESIGN.textSize;
+        elements.cardTextWeight.value = DEFAULT_CARD_DESIGN.textWeight;
+        elements.cardTextStyle.value = DEFAULT_CARD_DESIGN.textStyle;
+        elements.cardTextAlignment.value = DEFAULT_CARD_DESIGN.alignment;
+        elements.cardBackAlignment.value = DEFAULT_CARD_DESIGN.backAlignment;
+        faceStyles = { front: { ...DEFAULT_FACE_STYLE }, back: { ...DEFAULT_FACE_STYLE } };
+        loadFaceStyle(elements.formatSide.value);
+        updateCards();
+        if (saveData()) showStatus("ID card design reset.");
+      });
+      for (const input of [elements.id, elements.name, elements.grade, elements.year]) {
+        input.addEventListener("input", updateCards);
+      }
+      elements.search.addEventListener("input", renderList);
+      byId("new-student").addEventListener("click", clearForm);
+      byId("clear-form").addEventListener("click", clearForm);
+      byId("generate-id").addEventListener("click", () => {
+        elements.id.value = nextStudentId();
+        updateCards();
+      });
+
+      elements.delete.addEventListener("click", () => {
+        if (!editingId || !students.some((student) => student.id === editingId)) return;
+        const student = students.find((item) => item.id === editingId);
+        if (!window.confirm(`Delete student ${student.name} (${student.id})? This cannot be undone.`)) return;
+        const previous = students;
+        students = students.filter((item) => item.id !== editingId);
+        if (!saveData()) {
+          students = previous;
+          return;
+        }
+        clearForm();
+        showStatus("Student deleted.");
+      });
+
+      byId("export-csv").addEventListener("click", () => {
+        if (students.length === 0) {
+          showStatus("There are no student records to export.", true);
+          return;
+        }
+        const columns = ["Student ID", "Full Name", "Grade / Class", "School Year"];
+        const rows = students.map((student) => [student.id, student.name, student.grade, student.schoolYear]);
+        const csv = [columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+        const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "student-roster.csv";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showStatus("Student roster exported.");
+      });
+
+      byId("print-card").addEventListener("click", () => {
+        if (!elements.name.value.trim() || !elements.id.value.trim()) {
+          showStatus("Enter a student ID and full name before printing.", true);
+          return;
+        }
+        const front = elements.card.cloneNode(true);
+        const back = elements.backCard.cloneNode(true);
+        front.removeAttribute("id");
+        back.removeAttribute("id");
+        elements.printSheet.replaceChildren(front, back);
+        window.print();
+      });
+
+      readSavedData();
+      elements.removeAuthoritySignature.disabled = !currentAuthoritySignature;
+      elements.year.value = String(new Date().getFullYear());
+      elements.id.value = nextStudentId();
+      loadFaceStyle(elements.formatSide.value);
+      syncObjectModeControl();
+      updateCards();
+      updateObjectInspector();
+      renderList();
+    })();
+  </script>
+</body>
+</html>
