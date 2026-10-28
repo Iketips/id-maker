@@ -645,7 +645,7 @@
         <div class="button-row">
           <button id="print-card" class="btn btn-primary" type="button">Print front &amp; back</button>
         </div>
-        <p class="privacy-note">Your roster and photos stay in this browser on this device. Export a CSV backup when needed.</p>
+        <p id="storage-note" class="privacy-note">Your roster, photos, and card designs are stored in this browser's local database on this device. No online database or sync is configured. Export a CSV backup when needed.</p>
       </section>
     </div>
   </main>
@@ -656,6 +656,9 @@
       "use strict";
 
       const STORAGE_KEY = "schoolIdMaker.v1";
+      const DATABASE_NAME = "schoolIdMaker";
+      const DATABASE_VERSION = 1;
+      const DATABASE_STORES = ["students", "settings", "cardDesign"];
       const DEFAULT_SCHOOL = "Your School Name";
       const DEFAULT_CARD_DESIGN = {
         template: "classic",
@@ -744,6 +747,7 @@
         originalIdUploadStatus: byId("original-id-upload-status"),
         removeOriginalIdPicture: byId("remove-original-id-picture"),
         status: byId("status"),
+        storageNote: byId("storage-note"),
         delete: byId("delete-student"),
         card: byId("preview-card"),
         backCard: byId("preview-back"),
@@ -764,6 +768,8 @@
       let selectedObjectId = "";
       let objectPointerState = null;
       let statusTimer;
+      let database = null;
+      let storageFallback = false;
 
       const OBJECT_FIELDS = {
         name: "Student name",
@@ -823,9 +829,88 @@
         }
       }
 
-      function readSavedData() {
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          if (!("indexedDB" in window)) {
+            reject(new Error("This browser does not support a local database."));
+            return;
+          }
+          const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains("students")) db.createObjectStore("students", { keyPath: "id" });
+            if (!db.objectStoreNames.contains("settings")) db.createObjectStore("settings", { keyPath: "id" });
+            if (!db.objectStoreNames.contains("cardDesign")) db.createObjectStore("cardDesign", { keyPath: "id" });
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error("Could not open the local ID database."));
+          request.onblocked = () => reject(new Error("The ID database is blocked by another open app window. Close the other window and try again."));
+        });
+      }
+
+      function readDatabase(db) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(DATABASE_STORES, "readonly");
+          const studentsRequest = transaction.objectStore("students").getAll();
+          const settingsRequest = transaction.objectStore("settings").get("app");
+          const designRequest = transaction.objectStore("cardDesign").get("app");
+          transaction.oncomplete = () => {
+            const settings = settingsRequest.result || {};
+            const design = designRequest.result || {};
+            resolve({
+              schoolName: settings.schoolName,
+              organizationDetails: settings.organizationDetails,
+              authorityName: settings.authorityName,
+              authorityTitle: settings.authorityTitle,
+              authoritySignature: settings.authoritySignature,
+              students: studentsRequest.result,
+              cardDesign: design.value,
+              hasStoredData: Boolean(settingsRequest.result || designRequest.result || studentsRequest.result.length)
+            });
+          };
+          transaction.onerror = () => reject(transaction.error || new Error("Could not read the local ID database."));
+          transaction.onabort = () => reject(transaction.error || new Error("Reading the local ID database was cancelled."));
+        });
+      }
+
+      function writeDatabase(db, data) {
+        return new Promise((resolve, reject) => {
+          let transaction;
+          try {
+            transaction = db.transaction(DATABASE_STORES, "readwrite");
+            const studentStore = transaction.objectStore("students");
+            studentStore.clear();
+            for (const student of data.students) studentStore.put(student);
+            transaction.objectStore("settings").put({
+              id: "app",
+              schoolName: data.schoolName,
+              organizationDetails: data.organizationDetails,
+              authorityName: data.authorityName,
+              authorityTitle: data.authorityTitle,
+              authoritySignature: data.authoritySignature
+            });
+            transaction.objectStore("cardDesign").put({ id: "app", value: data.cardDesign });
+          } catch (error) {
+            reject(error);
+            return;
+          }
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error || new Error("Could not save to the local ID database."));
+          transaction.onabort = () => reject(transaction.error || new Error("Saving to the local ID database was cancelled."));
+        });
+      }
+
+      function readLegacyData() {
         try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        } catch (error) {
+          showStatus("Previous saved data could not be read. Browser storage may be unavailable or corrupted.", true);
+          return {};
+        }
+      }
+
+      function readSavedData(saved) {
+        try {
           students = Array.isArray(saved.students) ? saved.students.filter((student) =>
             student && typeof student.id === "string" && typeof student.name === "string"
           ) : [];
@@ -922,29 +1007,44 @@
         }
       }
 
+      function currentSavedData() {
+        return {
+          schoolName: elements.school.value.trim() || DEFAULT_SCHOOL,
+          organizationDetails: elements.organizationDetails.value.trim(),
+          authorityName: elements.authorityName.value.trim(),
+          authorityTitle: elements.authorityTitle.value.trim(),
+          authoritySignature: currentAuthoritySignature,
+          cardDesign: {
+            template: elements.cardTemplate.value,
+            backTemplate: elements.backTemplate.value,
+            front: faceStyles.front,
+            back: faceStyles.back,
+            alignment: elements.cardTextAlignment.value,
+            backAlignment: elements.cardBackAlignment.value,
+            objectMode,
+            objects: customObjects
+          },
+          students
+        };
+      }
+
       function saveData() {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            schoolName: elements.school.value.trim() || DEFAULT_SCHOOL,
-            organizationDetails: elements.organizationDetails.value.trim(),
-            authorityName: elements.authorityName.value.trim(),
-            authorityTitle: elements.authorityTitle.value.trim(),
-            authoritySignature: currentAuthoritySignature,
-            cardDesign: {
-              template: elements.cardTemplate.value,
-              backTemplate: elements.backTemplate.value,
-              front: faceStyles.front,
-              back: faceStyles.back,
-              alignment: elements.cardTextAlignment.value,
-              backAlignment: elements.cardBackAlignment.value,
-              objectMode,
-              objects: customObjects
-            },
-            students
-          }));
+          const data = currentSavedData();
+          if (storageFallback) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            return true;
+          }
+          if (!database) {
+            showStatus("The local database is not ready. Your changes could not be saved.", true);
+            return false;
+          }
+          writeDatabase(database, data).catch(() => {
+            showStatus("Could not save to the local ID database. Check browser storage space and try again.", true);
+          });
           return true;
         } catch (error) {
-          showStatus("Could not save data. Browser storage may be full; try a smaller photo.", true);
+          showStatus("Could not save data. Check browser storage space and try a smaller photo.", true);
           return false;
         }
       }
@@ -1936,15 +2036,53 @@
         window.print();
       });
 
-      readSavedData();
-      elements.removeAuthoritySignature.disabled = !currentAuthoritySignature;
-      elements.year.value = String(new Date().getFullYear());
-      elements.id.value = nextStudentId();
-      loadFaceStyle(elements.formatSide.value);
-      syncObjectModeControl();
-      updateCards();
-      updateObjectInspector();
-      renderList();
+      async function initializeApp() {
+        const appMain = document.querySelector("main");
+        appMain.inert = true;
+        appMain.setAttribute("aria-busy", "true");
+        elements.school.disabled = true;
+        let migratedLegacyData = false;
+        try {
+          database = await openDatabase();
+          const stored = await readDatabase(database);
+          if (stored.hasStoredData) {
+            readSavedData(stored);
+          } else {
+            const legacy = readLegacyData();
+            readSavedData(legacy);
+            if (Object.keys(legacy).length > 0) {
+              await writeDatabase(database, currentSavedData());
+              localStorage.removeItem(STORAGE_KEY);
+              migratedLegacyData = true;
+            }
+          }
+        } catch (error) {
+          database = null;
+          storageFallback = true;
+          readSavedData(readLegacyData());
+          elements.storageNote.textContent = "The local database is unavailable in this browser. Data is being saved to browser storage on this device instead; online sync is not configured.";
+          showStatus(error.message || "Could not open the local ID database.", true);
+        }
+
+        elements.removeAuthoritySignature.disabled = !currentAuthoritySignature;
+        elements.year.value = String(new Date().getFullYear());
+        elements.id.value = nextStudentId();
+        loadFaceStyle(elements.formatSide.value);
+        syncObjectModeControl();
+        updateCards();
+        updateObjectInspector();
+        renderList();
+        elements.school.disabled = false;
+        appMain.inert = false;
+        appMain.removeAttribute("aria-busy");
+        if (!storageFallback) {
+          showStatus(migratedLegacyData
+            ? "Existing student and card data was migrated to the local ID database."
+            : "Local ID database ready. Student and card data stays on this device.");
+        }
+      }
+
+      initializeApp();
     })();
   </script>
 </body>

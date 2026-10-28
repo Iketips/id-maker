@@ -2,6 +2,27 @@
 
 A browser-based school ID site for managing a student roster and preparing printable ID cards. It has no server or package installation requirements.
 
+## Local ID database
+
+The app stores student records, photos, organization details, signatures, card templates, and front/back object designs in a local IndexedDB database named `schoolIdMaker`. Each student's record is stored separately from app settings and card designs. Existing data in the older `schoolIdMaker.v1` browser-storage format is migrated to the database the first time the app opens.
+
+The database is local to the browser profile and device; it works offline but is not shared between computers or browsers. Online sync is not configured. Export a CSV backup of the roster before clearing browser data or removing the app.
+
+## Windows desktop app
+
+Run `SchoolIdMaker.exe` to open the designer in a standalone Microsoft Edge app window. Microsoft Edge is required. The executable contains the current website and extracts it into `%LOCALAPPDATA%\SchoolIdMaker` when launched; your roster and designs remain saved in the Edge profile on this computer.
+
+This build is unsigned. Windows Application Control or other managed-device policies may block it; only an authorized code-signing certificate can make a signed distribution for those environments.
+
+To rebuild the executable from source on Windows with PowerShell and the PS2EXE module installed, run:
+
+```powershell
+Import-Module ps2exe
+Invoke-ps2exe -inputFile .\SchoolIdMakerApp.ps1 -outputFile .\SchoolIdMaker.exe -embedFiles @{"%LOCALAPPDATA%\SchoolIdMaker\index.html"="$((Resolve-Path .\index.html).Path)"} -noConsole -title "School ID Maker" -description "Windows desktop school ID designer" -product "School ID Maker" -version "1.0.0.0"
+```
+
+The browser version can still be opened directly from `index.html` or hosted as a static site.
+
 ## Open the site
 
 Open `index.html` in a modern web browser. For predictable browser storage behavior and for hosting, you can also serve the folder with any static web server.
@@ -21,6 +42,6 @@ Open `index.html` in a modern web browser. For predictable browser storage behav
 - Upload an authority signature image or leave a line for signing after printing; saved signatures can be removed.
 - Preview both sides of an ID card and print front and back as separate card-sized pages.
 - Export the roster as a CSV file.
-- Keep roster data and photos in the browser's local storage on this device.
+- Store student records, photos, signatures, and card designs in the browser's local IndexedDB database on this device.
 
-Data is not uploaded or synchronized. Clearing this browser's saved site data removes the local roster and photos, so use CSV export for roster backups.
+Data is not uploaded or synchronized. Clearing this browser's saved site data removes the local database, so use CSV export for roster backups.
